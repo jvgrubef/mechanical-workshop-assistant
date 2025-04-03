@@ -20,7 +20,7 @@
     </head>
     <body>
         <div class="login-wrapper" id="login">
-            <h1>BIAMAC</h1>
+            <h1>AOM</h1>
             <p class="form-message">BEM-VINDO</p>
             <form class="form-content">
                 <label class="form-input-text">
