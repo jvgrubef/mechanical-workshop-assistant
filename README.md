@@ -22,3 +22,6 @@ Se desejar contribuir, fique à vontade para enviar um pull request com melhoria
 ## Licença
 
 Este projeto está sob a licença MIT.
+
+# Observações
+- Por enquanto tem o usuário padrão Administrador geral (usuário admin, senha admin).
