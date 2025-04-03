@@ -1,0 +1,49 @@
+ul.list.min {
+    list-style: none;
+    padding: 10px 0;
+}
+ul.list.min li {
+    display: flex;
+    height: 35px;
+    width: 100%;
+    padding: 0 2px 0 10px;
+    color: var(--main-text-color);
+} 
+ul.list.min li * {
+    flex-shrink: 0;
+    margin: auto 0;
+}
+ul.list.min li p {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-shrink: 1;
+}
+ul.list.min li:nth-child(even) {
+    background-color: #f5f5f5;
+}
+
+ul.list.min li.red .end p {
+    color: #ff0000;
+}
+ul.list.min li.green .end p {
+    color: #77DD77;
+}
+
+ul.list.min li .end {
+    height: 35px;
+    display: flex;
+    justify-content: end;
+    margin-left: auto;
+}
+ul.list.min li .end .edit {
+    display: flex;
+    height: 35px;
+    width: 35px;
+    padding: 8px;
+    cursor: pointer;
+}
+ul.list.min li .end .edit img {
+    height: 100%;
+    width: 100%;
+}

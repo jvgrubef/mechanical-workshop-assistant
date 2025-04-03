@@ -1,0 +1,41 @@
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: sans-serif, arial;
+    font-size: 1em;
+    outline: none;
+    --main-color: #ff7f50;
+    --main-text-color: #333333;
+    --out-text-color: #ffffff; 
+
+}
+/* Define a fonte padrão para o corpo */
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100vh;
+}
+body {
+    display: flex;
+}
+li, p, a, b, i, 
+h1, h2, h3, h4,
+button, input,
+textarea {
+    color: var(--main-text-color);
+}
+svg {
+    height: 100%;
+    width: 100%;
+}
+svg, svg * {
+    fill: currentcolor;
+    stroke: currentColor;
+}
+.hide {
+    display: none!important;
+}
