@@ -1,9 +1,11 @@
 <?php
     $db = [
         "host"     => "localhost",
-        "username" => "username",
-        "password" => "password",
-        "database" => "database"
+        "username" => "root",
+        "password" => "",
+        "database" => "database",
     ];
+
+    date_default_timezone_set('America/Sao_Paulo');
 ?>
     

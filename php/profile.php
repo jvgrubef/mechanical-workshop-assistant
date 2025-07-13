@@ -3,16 +3,16 @@ include("../inc/session.php");
 include("database.php");
 include("test.string.php");
 
-$stmt     = null;
+$stmt     =
 $stmtPwd  = null;
 $response = ["error" => false];
 
 try {
-    $userFirstName   = $_POST["user_first_name"]  ?? null; // String
-    $userLastName    = $_POST["user_last_name"]   ?? null; // String
-    $newPassword     = $_POST["new_password"]     ?? null; // String
-    $confirmPassword = $_POST["confirm_password"] ?? null; // String
-    $currentPassword = $_POST["current_password"] ?? null; // String
+    $userFirstName   = $_POST["user_first_name"]  ?? null;
+    $userLastName    = $_POST["user_last_name"]   ?? null;
+    $newPassword     = $_POST["new_password"]     ?? null;
+    $confirmPassword = $_POST["confirm_password"] ?? null;
+    $currentPassword = $_POST["current_password"] ?? null;
 
     $data = [$userFirstName, $userLastName];
 
@@ -50,7 +50,7 @@ try {
         $passwordRegex = "/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+])[A-Za-z\d!@#$%^&*()_+]{8,}$/";
 
         if (!preg_match($passwordRegex, $newPassword)) {
-            throw new Exception("A senha deve conter letras maiúsculas, minúsculas, números e caracteres especiais, e deve ter pelo menos 8 caracteres.");
+            throw new Exception("A senha deve conter letras maiúsculas, minúsculas, números e caracteres especiais.");
         }
 
         if ($newPassword !== $confirmPassword) {
@@ -67,6 +67,7 @@ try {
 
         $update_query = "UPDATE `users` SET `first_name` = ?, `last_name` = ?, `password_hash` = ? WHERE `id` = ?";
         $params = "sssi";
+
     } else {
         $update_query = "UPDATE `users` SET `first_name` = ?, `last_name` = ? WHERE `id` = ?";
         $params = "ssi";
@@ -83,6 +84,7 @@ try {
     if (!mysqli_stmt_execute($stmt)) {
         throw new Exception("Falha ao executar a consulta: " . mysqli_error($conn));
     };
+
 } catch (Exception $e) {
     $response["error"] = "Erro na execução: " . $e->getMessage();
 } finally {

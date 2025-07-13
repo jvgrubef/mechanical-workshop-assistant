@@ -71,11 +71,11 @@ window.addEventListener('load', () => {
 
         handleSubmitGlobal(formData, 'php/orders.php', (data) => {
             if (data.error) {
-                alert(data.error);
+                customAlert(data.error);
                 return;
             };
 
-            while (ordersList.firstChild) ordersList.removeChild(ordersList.firstChild);
+            clearCustomListGLobal(ordersList);
             data.records.forEach(e => listInput(e));
 
             paginationGlobal(data.pages.total, data?.currentPage, paginationList, (page) => {
@@ -84,9 +84,13 @@ window.addEventListener('load', () => {
         });
     };
 
-    registerNew.addEventListener('click', () => {
-        window.location.href = '?page=orders&view=new';
-    });
+    if (permsLocal > 1) {
+        registerNew.addEventListener('click', () => {
+            window.location.href = '?page=orders&view=new';
+        });
+    } else {
+        registerNew.style.display = 'none';
+    };
 
     searchInput.addEventListener('input', () => {
         clearTimeout(searchTimeout);

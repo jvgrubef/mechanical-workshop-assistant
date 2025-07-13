@@ -4,6 +4,7 @@
         exit;
     };
 ?>
+
 <div class="container">
     <div class="header">
         <h1 class="title">Lembretes</h1>
@@ -17,4 +18,5 @@
         <ul class="min list" id="reminders_list"></ul>
     </div>
 </div>
+
 <script src="js/reminders.js"></script>

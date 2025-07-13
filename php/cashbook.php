@@ -3,13 +3,15 @@ include("../inc/session.php");
 include("database.php");
 include("test.string.php");
 
+$perms    = hasPermission($_SESSION["user"]["admin_level"], "cashbook");
+
 $response = ["error" => false];
-$action   = $_POST["action"] ?? null; // String
+$action   = $_POST["action"] ?? null;
 
 function getCashBalance() {
     global $conn;
     global $date;
-
+    
     $query = "SELECT get_cash_balance() AS balance, get_month_balance(?, ?) AS month_balance";
     $response = [
         "month_balance" => "", 
@@ -94,11 +96,11 @@ function crudCashBook() {
     global $conn;
     global $action;
 
-    $transactionType = $_POST["transaction_type"] ?? null; // String
-    $transactionDate = $_POST["transaction_date"] ?? null; // yyyy-MM-dd
-    $description     = $_POST["description"]      ?? null; // String
-    $amount          = $_POST["amount"]           ?? null; // Float
-    $id              = $_POST["id"]               ?? null; // Int
+    $transactionType = $_POST["transaction_type"] ?? null;
+    $transactionDate = $_POST["transaction_date"] ?? null;
+    $description     = $_POST["description"]      ?? null;
+    $amount          = $_POST["amount"]           ?? null;
+    $id              = $_POST["id"]               ?? null;
 
     include('execute.query.php');
 
@@ -124,8 +126,13 @@ function crudCashBook() {
     };
 
     if (in_array($action, ["new", "edit"])) {
+        if (!isValidMonetary($amount)) {
+            throw new Exception("O valor de registro não é numérico.");
+        };
 
-        if (!is_numeric($amount) || $amount < 0) {
+        $amount = adjustValueMonetary($amount);
+
+        if ($amount == "0.00") {
             throw new Exception("O valor de registro não pode ser menor que zero.");
         };
 
@@ -142,10 +149,10 @@ function crudCashBook() {
         };
 
         if ($transactionType === "out") {
-            $amount = -$amount;
+            $amount = "-$amount";
         };
 
-        $params = [(Int)$_SESSION["user"]["id"], (String)$description, (Float)$amount, (String)$transactionDate];
+        $params = [(Int)$_SESSION["user"]["id"], (String)$description, (String)$amount, (String)$transactionDate];
         $types = "isds";
 
         if     ($action === "new")  { $query = $queryInsert; }
@@ -161,8 +168,16 @@ function crudCashBook() {
 
 try {
     if (isset($_POST["action"])) { 
+        if ($perms < 2) {
+            throw new Exception("Você não possui poder administrativo para essa ação.");
+        };
+
         $response = crudCashBook();
     } elseif (isset($_POST["date"])) {
+        if ($perms < 1) {
+            throw new Exception("Você não possui poder administrativo para essa ação.");
+        };
+
         $date = $_POST["date"];
 
         if(!testIsDate($date)) {

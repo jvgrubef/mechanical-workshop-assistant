@@ -6,8 +6,13 @@
         <nav class="menu">
             <button type="button" id="register_new" class="button">Novo Registro</button>
             <input type="date" id="date" class="button">
-            <input type="text" id="total_balance" readonly class="button" value="Balanço: 0,00">
-            <input type="text" id="month_balance" readonly class="button" value="Balanço do mês: 0,00">
+            <span class="separator"></span>
+            <label class="button">
+                <p id="total_balance">Balanço: 0,00</p>
+            </label>
+            <label class="button">
+                <p id="month_balance">Balanço do mês: 0,00</p>
+            </label>
         </nav>
         <ul class="min list" id="cashbook_list"></ul>
     </div>

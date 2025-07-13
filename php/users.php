@@ -3,20 +3,73 @@ include("../inc/session.php");
 include("database.php");
 include("test.string.php");
 
+$perms    = hasPermission($_SESSION["user"]["admin_level"], "users");
+
 $response = ["error" => false];
-$action   = $_POST["action"] ?? null; // String
+$action   = $_POST["action"] ?? null;
+
+function getPermissionsFields() {
+    $errorItens = [];
+    $errorLabel = [
+        'cashbook'  => "Livro Caixa",
+        'clients'   => "Clientes",
+        'orders'    => "Orçamentos",
+        'inventory' => "Estoque & Marcas",
+        'reminders' => "Lembretes",
+        'users'     => "Usuários"
+    ];
+
+    $permissionsFields = [
+        'cashbook'  => $_POST['cashbook']  ?? 0,
+        'clients'   => $_POST['clients']   ?? 0,
+        'orders'    => $_POST['orders']    ?? 0,
+        'inventory' => $_POST['inventory'] ?? 0,
+        'reminders' => $_POST['reminders'] ?? 0,
+        'users'     => $_POST['users']     ?? 0,
+    ];
+
+    foreach ($permissionsFields as $key => $value) {
+        if (!is_numeric($value) || ($value < 0 || $value > 2)) {
+            $permissionsFields[$key] = 0;
+            $errorItens[] = $errorLabel[$key];
+            continue;
+        };
+
+        $permissionsFields[$key] = testIsEmpty($value) ?  0 : (Int)$value;
+    };
+
+    $error = !empty($errorItens) ? "Valor inválido para " . implode(", ", $errorItens) . ". Por favor, envie um valor inteiro de 0 á 2" : false;
+
+    $bits = 0;
+
+    $bits |= ($permissionsFields["cashbook"]  << 0);  // 0° & 1º bit (cashbook)
+    $bits |= ($permissionsFields["clients"]   << 2);  // 2º & 3º bit (clients)
+    $bits |= ($permissionsFields["orders"]    << 4);  // 4º & 5º bit (orders)
+    $bits |= ($permissionsFields["inventory"] << 6);  // 6º & 7º bit (inventory)
+    $bits |= ($permissionsFields["reminders"] << 8);  // 8º & 9º bit (reminders)
+    $bits |= ($permissionsFields["users"]     << 10); // 10º & 11º bit (users)
+
+    return [
+        "error" => $error, 
+        "bits" => $bits
+    ];
+};
 
 function crudUsers() {
     global $conn;
     global $action;
+    global $perms;
 
-    $username        = $_POST["username"]         ?? null; // String
-    $firstName       = $_POST["first_name"]       ?? null; // String
-    $lastName        = $_POST["last_name"]        ?? null; // String
-    $adminLevel      = $_POST["admin_level"]      ?? null; // 0-3 INT
-    $newPassword     = $_POST["new_password"]     ?? null; // String
-    $confirmPassword = $_POST["confirm_password"] ?? null; // String
-    $id              = $_POST["id"]               ?? null; // INT
+    if ($perms < 2) {
+        throw new Exception("Você não possui poder administrativo para essa ação.");
+    };
+
+    $username        = $_POST["username"]         ?? null;
+    $firstName       = $_POST["first_name"]       ?? null;
+    $lastName        = $_POST["last_name"]        ?? null;
+    $newPassword     = $_POST["new_password"]     ?? null;
+    $confirmPassword = $_POST["confirm_password"] ?? null;
+    $id              = $_POST["id"]               ?? null;
 
     include("execute.query.php");
 
@@ -46,15 +99,15 @@ function crudUsers() {
     };   
 
     if (in_array($action, ["new", "edit"])) {
+
+        $permissions = getPermissionsFields();
+
+        if ($permissions["error"])   throw new Exception($permissions["error"]);
         if (testIsEmpty($username))  throw new Exception("O usuário não pode ser vazio.");
         if (testIsEmpty($firstName)) throw new Exception("O nome não pode ser vazio.");
         if (testIsEmpty($lastName))  throw new Exception("O sobrenome não pode ser vazio.");
 
-        if (!is_numeric($adminLevel) || ($adminLevel < 0 || $adminLevel > 3)) {
-            throw new Exception("Nível adminstrativo informado não é válido.");
-        };
-
-        $params = [(String)$username, (String)$firstName, (String)$lastName, (Int)$adminLevel];
+        $params = [(String)$username, (String)$firstName, (String)$lastName, $permissions["bits"]];
         $types = "sssi";
 
         if ($action === "new" && testIsEmpty($newPassword)) {
@@ -95,10 +148,15 @@ function crudUsers() {
 
 function listUsers() {
     global $conn;
+    global $perms;
+
+    if ($perms < 1) {
+        throw new Exception("Você não possui poder administrativo para essa ação.");
+    };
 
     $search    = $_POST["search"] ?? "";
-    $limit     = isset($_POST["limit"]) ? (int)$_POST["limit"] : 20;
-    $page      = isset($_POST["page"]) ? (int)$_POST["page"] : 1;
+    $limit     = max(1, (int)$_POST["limit"] ?: 20);
+    $page      = max(1, (int)$_POST["page"]  ?: 1);
     $offset    = ($page - 1) * $limit;
     $response  = [];
     $stmt      = 
@@ -172,10 +230,6 @@ function listUsers() {
 }
 
 try {
-    if ($_SESSION["user"]["admin_level"] < 2) {
-        throw new Exception("Você não possui poder administrativo para essa ação.");
-    };
-
     $response = isset($_POST["action"]) ? crudUsers() : listUsers();
 } catch (Exception $e) {
     $response["error"] = "Erro: " . $e->getMessage();

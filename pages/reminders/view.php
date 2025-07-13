@@ -80,7 +80,5 @@
     </div>
 </div>
 
-<script>
-    const reminder = '<?= $_GET['view']; ?>';
-</script>
 <script src="js/reminders.view.js"></script>
+<style>.hide { display: none!important; }</style>

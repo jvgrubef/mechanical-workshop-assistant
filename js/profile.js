@@ -1,4 +1,4 @@
-window.addEventListener('load', () => {
+window.addEventListener('load', async () => {
     const userForm        = document.getElementById('user');
     const uploadImage     = userForm.querySelector('button[name="upload_image"]');
     const newPassword     = userForm.querySelector('input[name="new_password"]');
@@ -7,14 +7,16 @@ window.addEventListener('load', () => {
 
     newPassword.addEventListener('input', event => {
         const passwordValue = event.target.value;
-        
+
         if (passwordValue.length < 8) {
             if (passwordValue.length == 0) {
                 confirmPassword.required = currentPassword.required = false;
                 confirmPassword.value = currentPassword.value = '';
 
                 event.target.previousElementSibling.textContent = 'Senha (Deixe vazio para não alterar)';
-            } else {
+            } 
+            
+            else {
                 event.target.previousElementSibling.textContent = 'Senha (A nova senha deve conter 8 ou mais caracteres)';
             };
         } 
@@ -26,6 +28,7 @@ window.addEventListener('load', () => {
         else if (/(\w)\1{2,}/.test(passwordValue) || /1234|abcd/.test(passwordValue)) {
             event.target.previousElementSibling.textContent = 'Senha (A senha não pode conter caracteres repetitivos ou sequências simples)';
         }
+
         else {
             event.target.previousElementSibling.textContent = 'Senha (Próximo passo abaixo)';
             confirmPassword.parentElement.style.display = 'flex';
@@ -42,10 +45,14 @@ window.addEventListener('load', () => {
     confirmPassword.addEventListener('input', event => {
         if (event.target.value.length == 0) {
             event.target.previousElementSibling.textContent = 'Confirme a Senha (Confirme a senha)';
-        } else {
+        } 
+        
+        else {
             if (event.target.value !== newPassword.value) {
                 event.target.previousElementSibling.textContent = 'Confirme a Senha (A confirmação está diferente da nova senha)';
-            } else{
+            } 
+            
+            else{
                 event.target.previousElementSibling.textContent = 'Confirme a Senha (Próximo passo abaixo)';
                 currentPassword.parentElement.style.display = 'flex';
 
@@ -56,19 +63,38 @@ window.addEventListener('load', () => {
         currentPassword.parentElement.style.display = 'none';
     });
 
-    userForm.addEventListener('submit', event => {
+    userForm.addEventListener('submit', async event => {
         event.preventDefault();
-        if (!confirm('Confirmar alteração?')) return;
+        if (!await customConfirm('Confirmar alteração?', 'Claro', 'Cancelar')) return;
 
         handleSubmitGlobal(new FormData(userForm), 'php/profile.php', (data) => {
             if (data.error) {
-                alert(data.error);
+                customAlert(data.error);
                 return;
             };
         });
     });
 
-    uploadImage.addEventListener('click', function() {
+    uploadImage.addEventListener('click', async () => {
+
+        if (!document.querySelectorAll('.profile-image')[0].src.includes("default")) {
+            if (!await customConfirm('Oque deseja fazer com a imagem de perfil?', 'Trocar ', 'Remover')) {
+                const formData = new FormData();
+                formData.append('action', 'delete'); 
+    
+                handleSubmitGlobal(formData, 'php/profile.image.php', (data) => {
+                    if (data.error) {
+                        customAlert(data.error);
+                        return;
+                    };
+    
+                    reloadUserImage('img/users/' + 'default.jpg');
+                });
+    
+                return;
+            };
+        };
+
         const inputImage = document.createElement('input');
         inputImage.type = 'file';
         inputImage.accept = 'image/*';
@@ -79,21 +105,21 @@ window.addEventListener('load', () => {
             if (!file) return;
 
             if (!['image/jpeg', 'image/png', 'image/gif'].includes(file.type)) {
-                alert('Apenas arquivos JPG, PNG ou GIF são permitidos!');
+                customAlert('Apenas arquivos JPG, PNG ou GIF são permitidos!');
                 return;
             };
 
             const formData = new FormData();
             formData.append('image', file);
-            formData.append('submit', 'true'); 
+            formData.append('action', 'upload'); 
 
             handleSubmitGlobal(formData, 'php/profile.image.php', (data) => {
                 if (data.error) {
-                    alert(data.error);
+                    customAlert(data.error);
                     return;
                 };
 
-                reloadUserImage('img/users/' + data.image.new);
+                reloadUserImage('img/users/' + data.image);
             });
         });
 

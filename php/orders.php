@@ -3,21 +3,26 @@ include("../inc/session.php");
 include("database.php");
 include("test.string.php");
 
+$perms    = hasPermission($_SESSION["user"]["admin_level"], "orders");
+
 $response = ["error" => false];
-$action   = $_POST["action"] ?? null; // String
+$action   = $_POST["action"] ?? null;
 
 function crudOrdes() {
     global $conn;
     global $action;
+    global $perms;
 
-    $name     = $_POST["name"]      ?? null; // String
-    $details  = $_POST["details"]   ?? "";   // String
-    $items    = $_POST["items"]     ?? null; // Array
-    $values   = $_POST["values"]    ?? null; // Array
-    $status   = $_POST["status"]    ?? null; // 0-5 INT
-    $date     = $_POST["date"]      ?? null; // yyyy-MM-dd String
-    $clientId = $_POST["client_id"] ?? null; // INT
-    $id       = $_POST["id"]        ?? null; // INT
+    $name     = $_POST["name"]      ?? null;
+    $details  = $_POST["details"]   ?? "";
+    $items    = $_POST["items"]     ?? null;
+    $values   = $_POST["values"]    ?? null;
+    $quantity = $_POST["qtd"]       ?? null;
+    $status   = $_POST["status"]    ?? null;
+    $date     = $_POST["date"]      ?? null;
+    $clientId = $_POST["client_id"] ?? null;
+    $model    = $_POST["model"]     ?? null;
+    $id       = $_POST["id"]        ?? null;
 
     include('execute.query.php');
 
@@ -25,11 +30,19 @@ function crudOrdes() {
         throw new Exception("Tipo de operação inválida.");
     };
 
-    $queryInsert = "INSERT INTO `orders` (`client_id`, `name`, `details`, `items`, `status`, `order_date`) VALUES (?, ?, ?, ?, ?, ?)";
-    $queryUpdate = "UPDATE `orders` SET `client_id` = ?, `name` = ?, `details` = ?, `items` = ?, `status` = ?, `order_date` = ? WHERE `id` = ?";
+    if ($action == "get" && $perms < 1) {
+        throw new Exception("Você não possui permissão para acessar esta informação.");
+    };
+
+    if (in_array($action, ["del", "edit", "new"]) && $perms < 2) {
+        throw new Exception("Você não possui poder administrativo para essa ação.");
+    };
+
+    $queryInsert = "INSERT INTO `orders` (`client_id`, `name`, `details`, `items`, `status`, `order_date`, `model`) VALUES (?, ?, ?, ?, ?, ?, ?)";
+    $queryUpdate = "UPDATE `orders` SET `client_id` = ?, `name` = ?, `details` = ?, `items` = ?, `status` = ?, `order_date` = ?, `model` = ? WHERE `id` = ?";
     $queryDelete = "DELETE FROM `orders` WHERE `id` = ?";
-    $querySelect = "SELECT  o.id AS `id`, o.name AS `name`, o.items AS `items`, o.status AS `status`, o.details AS `details`, 
-                        o.order_date AS `order_date`, c.id  AS `client_id`, c.name AS `client_name`, c.phones AS `client_phones` 
+    $querySelect = "SELECT  o.id AS `id`, o.name AS `name`, o.items AS `items`, o.status AS `status`, o.details AS `details`, o.model AS `model`,
+                            o.order_date AS `order_date`, c.id  AS `client_id`, c.name AS `client_name`, c.phones AS `client_phones` 
                     FROM `orders` AS o INNER JOIN `clients` AS c  ON o.client_id = c.id WHERE o.id = ?";
     $queryTestId = "SELECT `id` FROM `orders` WHERE `id` = ?";
 
@@ -56,8 +69,12 @@ function crudOrdes() {
             throw new Exception("Informe o nome do orçamento, por favor.");
         };
 
-        if ((!is_array($items) || !is_array($values)) || count($items) !== count($values)) {
+        if (!is_array($items) || !is_array($values) || !is_array($quantity)) {
             throw new Exception("Os campos dos \"itens\" e seus \"valores\" não são válidos.");
+        };
+
+        if (count($items) !== count($values) || count($values) !== count($quantity)) {
+            throw new Exception("Os campos de \"itens\" não tem a mesma quantidade de valores");
         };
 
         if (!is_numeric($status) || ($status < 0 || $status > 5)) {
@@ -68,13 +85,14 @@ function crudOrdes() {
             throw new Exception("A data fornecida não é válida.");
         };
 
-        $itemsList = json_encode(array_map(fn($item, $value) => [
+        $itemsList = json_encode(array_map(fn($item, $value, $quantity) => [
             "item" => $item,
-            "value" => str_replace(",", ".", preg_replace("/[^0-9,]+/", "", $value))
-        ], $items, $values));
+            "quantity" => $quantity,
+            "value" => adjustValueMonetary(str_replace(",", ".", preg_replace("/[^0-9,]+/", "", $value)))
+        ], $items, $values, $quantity));
 
-        $params = [(Int)$clientId, (String)$name, (String)$details, $itemsList, (Int)$status, (String)$date];
-        $types = "isssis";
+        $params = [(Int)$clientId, (String)$name, (String)$details, $itemsList, (Int)$status, (String)$date, (int)$model];
+        $types = "isssisi";
 
         if     ($action === "new")  { $query = $queryInsert; }
         elseif ($action === "edit") { $query = $queryUpdate; $types .= "i"; $params[] = (Int)$id; };
@@ -93,12 +111,16 @@ function crudOrdes() {
 
 function listOrders() {
     global $conn;    
+    global $perms;
+    
+    if ($perms < 1) {
+        throw new Exception("Você não possui poder administrativo para essa ação.");
+    };
 
     $search    = $_POST["search"] ?? "";
     $client    = $_POST["client"] ?? "";
-
-    $limit     = isset($_POST["limit"]) ? (int)$_POST["limit"] : 20;
-    $page      = isset($_POST["page"])  ? (int)$_POST["page"] : 1;
+    $limit     = max(1, (int)$_POST["limit"] ?: 20);
+    $page      = max(1, (int)$_POST["page"]  ?: 1);
     $offset    = ($page - 1) * $limit;
     $response  = [];
     $stmt      = 
@@ -126,7 +148,7 @@ function listOrders() {
         $whereClause = !empty($conditions) ? "WHERE " . implode(" AND ", $conditions) : "";
 
         $query = "SELECT o.id AS order_id, o.name AS order_name, o.status AS order_status, c.name AS client_name FROM `orders` AS o 
-                  INNER JOIN `clients` AS c ON o.client_id = c.id $whereClause ORDER BY o.order_date DESC LIMIT ?, ?";
+                  INNER JOIN `clients` AS c ON o.client_id = c.id $whereClause ORDER BY o.order_date DESC, o.id DESC LIMIT ?, ?";
 
         $countQuery = "SELECT COUNT(o.id) AS `total` FROM `orders` AS o INNER JOIN `clients` AS c ON o.client_id = c.id $whereClause";
 

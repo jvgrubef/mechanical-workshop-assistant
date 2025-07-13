@@ -1,28 +1,33 @@
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
-SET time_zone = "+00:00";
+SET time_zone = "-03:00";
+
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
 /*!40101 SET NAMES utf8mb4 */;
 
+--
+-- Banco de dados: `AOM`
+--
+
 DELIMITER $$
 --
 -- Funções
 --
-CREATE FUNCTION `get_cash_balance` () RETURNS DECIMAL(10,2) DETERMINISTIC BEGIN
-    DECLARE balance DECIMAL(10, 2);
-
+CREATE DEFINER=`sakurai`@`%` FUNCTION `get_cash_balance` () RETURNS DECIMAL(65,2) DETERMINISTIC BEGIN
+    DECLARE balance DECIMAL(65, 2);
+    
+    -- Soma os valores da tabela 'cash_book' para calcular o saldo
     SELECT SUM(amount) INTO balance
     FROM cash_book;
     
     RETURN balance;
 END$$
 
-CREATE FUNCTION `get_model_names_by_ids` (`ids` VARCHAR(255)) RETURNS VARCHAR(255) CHARSET utf8mb4 COLLATE utf8mb4_general_ci DETERMINISTIC BEGIN
+CREATE DEFINER=`sakurai`@`%` FUNCTION `get_model_names_by_ids` (`ids` VARCHAR(255)) RETURNS VARCHAR(255) CHARSET utf8mb4 COLLATE utf8mb4_general_ci DETERMINISTIC BEGIN
     DECLARE result VARCHAR(255);
-
     SET ids = REPLACE(ids, ' ', '');
     SELECT GROUP_CONCAT(m.name SEPARATOR ', ') 
     INTO result
@@ -32,9 +37,10 @@ CREATE FUNCTION `get_model_names_by_ids` (`ids` VARCHAR(255)) RETURNS VARCHAR(25
     RETURN result;
 END$$
 
-CREATE FUNCTION `get_month_balance` (`month` INT, `year` INT) RETURNS DECIMAL(10,2) DETERMINISTIC BEGIN
-    DECLARE balance DECIMAL(10, 2);
-
+CREATE DEFINER=`sakurai`@`%` FUNCTION `get_month_balance` (`month` INT, `year` INT) RETURNS DECIMAL(65,2) DETERMINISTIC BEGIN
+    DECLARE balance DECIMAL(65, 2);
+    
+    -- Soma os valores da tabela 'cash_book' filtrando pelo mês e ano
     SELECT SUM(amount) INTO balance
     FROM cash_book
     WHERE MONTH(transaction_date) = month 
@@ -43,7 +49,7 @@ CREATE FUNCTION `get_month_balance` (`month` INT, `year` INT) RETURNS DECIMAL(10
     RETURN balance;
 END$$
 
-CREATE FUNCTION `tools_remove_accents` (`text` TEXT) RETURNS TEXT CHARSET utf8mb4 COLLATE utf8mb4_general_ci DETERMINISTIC BEGIN
+CREATE DEFINER=`sakurai`@`%` FUNCTION `tools_remove_accents` (`text` TEXT) RETURNS TEXT CHARSET utf8mb4 COLLATE utf8mb4_general_ci DETERMINISTIC BEGIN
     DECLARE i INT DEFAULT 0;
     DECLARE accented_chars TEXT DEFAULT 'ÁÉÍÓÚÀÈÌÒÙÂÊÎÔÛÄËÏÖÜÃÕÑáéíóúàèìòùâêîôûäëïöüãõñçÇ';
     DECLARE unaccented_chars TEXT DEFAULT 'AEIOUAEIOUAEIOUAEIOUAONaeiouaeiouaeiouaeiouaoncC';
@@ -65,13 +71,12 @@ DELIMITER ;
 --
 
 CREATE TABLE `cash_book` (
-  `id` int(11) NOT NULL,
+  `id` bigint(20) NOT NULL,
   `user_id` int(11) DEFAULT NULL,
   `description` varchar(255) NOT NULL,
-  `amount` decimal(10,2) NOT NULL,
+  `amount` decimal(65,2) NOT NULL,
   `transaction_date` date DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
 
 -- --------------------------------------------------------
 
@@ -85,20 +90,6 @@ CREATE TABLE `clients` (
   `phones` longtext DEFAULT '[]',
   `address` varchar(255) DEFAULT NULL,
   `rating` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Estrutura para tabela `inventory`
---
-
-CREATE TABLE `inventory` (
-  `id` int(11) NOT NULL,
-  `description` varchar(255) NOT NULL,
-  `value` decimal(10,2) NOT NULL,
-  `quantity` int(11) NOT NULL,
-  `compatible` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -127,7 +118,8 @@ CREATE TABLE `orders` (
   `details` varchar(255) NOT NULL,
   `order_date` date DEFAULT current_timestamp(),
   `items` longtext NOT NULL CHECK (json_valid(`items`)),
-  `status` int(11) NOT NULL DEFAULT 0
+  `status` int(11) NOT NULL DEFAULT 0,
+  `model` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -170,7 +162,7 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `username`, `first_name`, `last_name`, `password_hash`, `admin_level`, `created_at`, `image_path`) VALUES
-(1, 'admin', 'Administrator', 'User', '$2y$10$QOq9O1mMNt5FuUjXD02fGO9uMU1iroVwD/cPzuKsIN57/7tzF6nla', 3, NULL, 'default.jpg');
+(1, 'admin', 'Administrador', 'User', '$2y$10$QOq9O1mMNt5FuUjXD02fGO9uMU1iroVwD/cPzuKsIN57/7tzF6nla', 3, NULL, 'default.jpg');
 
 --
 -- Índices para tabelas despejadas
@@ -221,52 +213,6 @@ ALTER TABLE `reminders`
 ALTER TABLE `users`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `login` (`username`);
-
---
--- AUTO_INCREMENT para tabelas despejadas
---
-
---
--- AUTO_INCREMENT de tabela `cash_book`
---
-ALTER TABLE `cash_book`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT de tabela `clients`
---
-ALTER TABLE `clients`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT de tabela `inventory`
---
-ALTER TABLE `inventory`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT de tabela `models`
---
-ALTER TABLE `models`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT de tabela `orders`
---
-ALTER TABLE `orders`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT de tabela `reminders`
---
-ALTER TABLE `reminders`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT de tabela `users`
---
-ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- Restrições para tabelas despejadas

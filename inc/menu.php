@@ -3,7 +3,7 @@
         <li class='cashbook'>
             <a href='?page=cashbook'>
                 <i><?php include('./img/icons/cashbook.svg');?></i>
-                Livro Caixa
+                <span>Livro Caixa</span>
             </a>
         </li>
         <li class='clients'>
@@ -30,13 +30,11 @@
                 Lembretes
             </a>
         </li>
-        <?php if ($_SESSION["user"]["admin_level"] >= 2): ?>
         <li class='users'>
             <a href='?page=users'>
                 <i><?php include('./img/icons/people.svg');?></i>
                 Usuários
             </a>
         </li>
-        <?php endif;?>
     </ul>
 </nav>

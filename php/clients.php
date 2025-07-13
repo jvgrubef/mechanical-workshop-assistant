@@ -3,19 +3,27 @@ include("../inc/session.php");
 include("database.php");
 include("test.string.php");
 
+$perms       = hasPermission($_SESSION["user"]["admin_level"], "clients");
+$permsOrders = hasPermission($_SESSION["user"]["admin_level"], "orders");
+
 $response = ["error" => false];
-$action   = $_POST["action"] ?? null; // String
+$action   = $_POST["action"] ?? null;
 
 function crudClients() {
     global $conn;
     global $action;
+    global $perms;
 
-    $name       = $_POST["name"]        ?? null; // String
-    $phones     = $_POST["phones"]      ?? "";   // String
-    $phonesList = $_POST["phones_list"] ?? "";   // Array
-    $rating     = $_POST["rating"]      ?? "3";  // 0-5 INT
-    $address    = $_POST["address"]     ?? "";   // String
-    $id         = $_POST["id"]          ?? null; // INT
+    if ($perms < 2) {
+        throw new Exception("Você não possui poder administrativo para essa ação.");
+    };
+    
+    $name       = $_POST["name"]        ?? null;
+    $phones     = $_POST["phones"]      ?? "";
+    $phonesList = $_POST["phones_list"] ?? "";
+    $rating     = $_POST["rating"]      ?? "3";
+    $address    = $_POST["address"]     ?? "";
+    $id         = $_POST["id"]          ?? null;
 
     include('execute.query.php');
 
@@ -37,8 +45,8 @@ function crudClients() {
     };
 
     if (in_array($action, ["new", "edit"])) {
-        if (testIsEmpty($name))                                throw new Exception("O nome do cliente não pode ser vazio.");
-        if (!is_numeric($price) || ($price < 0 || $price > 5)) throw new Exception("A nota do cliente deve ser de zero a cinco.");
+        if (testIsEmpty($name))                                   throw new Exception("O nome do cliente não pode ser vazio.");
+        if (!is_numeric($rating) || ($rating < 0 || $rating > 5)) throw new Exception("A nota do cliente deve ser de zero a cinco.");
         
         $phonesListInsert = [];
 
@@ -63,10 +71,16 @@ function crudClients() {
 
 function listClients() {
     global $conn;
+    global $perms;
+    global $permsOrders;
+
+    if ($perms < 1 && $permsOrders < 1) {
+        throw new Exception("Você não possui permissão para acessar esta informação.");
+    };
 
     $search    = $_POST["search"] ?? "";
-    $limit     = isset($_POST["limit"]) ? (int)$_POST["limit"] : 20;
-    $page      = isset($_POST["page"]) ? (int)$_POST["page"] : 1;
+    $limit     = max(1, (int)$_POST["limit"] ?: 20);
+    $page      = max(1, (int)$_POST["page"]  ?: 1);
     $offset    = ($page - 1) * $limit;
     $response  = [];
     $stmt      = 

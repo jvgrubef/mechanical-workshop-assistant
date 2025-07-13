@@ -10,9 +10,7 @@
     --main-color: #ff7f50;
     --main-text-color: #333333;
     --out-text-color: #ffffff; 
-
 }
-/* Define a fonte padrão para o corpo */
 html, body {
     margin: 0;
     padding: 0;
@@ -35,7 +33,4 @@ svg {
 svg, svg * {
     fill: currentcolor;
     stroke: currentColor;
-}
-.hide {
-    display: none!important;
 }

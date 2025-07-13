@@ -1,13 +1,15 @@
 <?php
 session_start();
+
 include("database.php");
 include("test.string.php");
+
 $stmt     = null;
 $response = ["error" => false];
 
 try {
-    $username = (String)($_POST["username"] ?? "");
-    $password = (String)($_POST["password"] ?? "");
+    $username = $_POST["username"] ?? null;
+    $password = $_POST["password"] ?? null;
 
     if (testMultipleIsEmpty([$username, $password])) {
         throw new Exception("Por favor, preencha todos os campos.");
@@ -26,6 +28,7 @@ try {
     };
 
     $result = mysqli_stmt_get_result($stmt);
+
 
     if (mysqli_num_rows($result) !== 1) {
         throw new Exception("Login ou senha inválidos.");

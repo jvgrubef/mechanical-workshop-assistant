@@ -66,11 +66,11 @@ window.addEventListener('load', () => {
 
         handleSubmitGlobal(formData, 'php/reminders.php', (data) => {
             if (data.error) {
-                alert(data.error);
+                customAlert(data.error);
                 return;
             };
 
-            while (remindersList.firstChild) remindersList.removeChild(remindersList.firstChild);
+            clearCustomListGLobal(remindersList);
             data.records.forEach(e => listInput(e));
 
             paginationGlobal(data.pages.total, data?.currentPage, paginationList, (page) => {
@@ -79,9 +79,13 @@ window.addEventListener('load', () => {
         });
     };
 
-    registerNew.addEventListener('click', () => {
-        window.location.href = '?page=reminders&view=new';
-    });
+    if (permsLocal > 1) {
+        registerNew.addEventListener('click', () => {
+            window.location.href = '?page=reminders&view=new';
+        });
+    } else {
+        registerNew.style.display = 'none';
+    };
 
     searchInput.addEventListener('input', () => {
         clearTimeout(searchTimeout);

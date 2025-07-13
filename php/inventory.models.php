@@ -3,22 +3,34 @@ include("../inc/session.php");
 include("database.php");
 include("test.string.php");
 
+$perms       = hasPermission($_SESSION["user"]["admin_level"], "inventory");
+$permsOrders = hasPermission($_SESSION["user"]["admin_level"], "orders");
+
 $response = ["error" => false];
-$action   = $_POST["action"] ?? null; // String
+$action   = $_POST["action"] ?? null;
 
 function crudModels() {
     global $conn;
     global $action;
+    global $perms;
 
-    $name   = $_POST["name"]   ?? null; // String
-    $type   = $_POST["type"]   ?? null; // String
-    $brand  = $_POST["brand"]  ?? null; // String
-    $id     = $_POST["id"]     ?? null; // Int or Array
+    $name   = $_POST["name"]   ?? null;
+    $type   = $_POST["type"]   ?? null;
+    $brand  = $_POST["brand"]  ?? null;
+    $id     = $_POST["id"]     ?? null;
 
     include('execute.query.php');
 
     if (!in_array($action, ["del", "new", "edit", "get"])) {
         throw new Exception("Tipo de operação inválida.");
+    };
+
+    if ($action == "get" && $perms < 1) {
+        throw new Exception("Você não possui permissão para acessar esta informação.");
+    };
+
+    if (in_array($action, ["del", "edit", "new"]) && $perms < 2) {
+        throw new Exception("Você não possui poder administrativo para essa ação.");
     };
 
     $queryInsert = "INSERT INTO `models` (`name`, `type`, `brand`) VALUES (?, ?, ?)";
@@ -79,10 +91,16 @@ function crudModels() {
 
 function listModels() {
     global $conn;
+    global $perms;
+    global $permsOrders;
+
+    if ($perms < 1 && $permsOrders < 1) {
+        throw new Exception("Você não possui permissão para acessar esta informação.");
+    };
 
     $search    = $_POST["search"] ?? "";
-    $limit     = isset($_POST["limit"]) ? (int)$_POST["limit"] : 20;
-    $page      = isset($_POST["page"])  ? (int)$_POST["page"] : 1;
+    $limit     = max(1, (int)$_POST["limit"] ?: 20);
+    $page      = max(1, (int)$_POST["page"]  ?: 1);
     $offset    = ($page - 1) * $limit;
     $response  = [];
     $stmt      = 

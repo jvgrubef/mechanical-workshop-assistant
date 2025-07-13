@@ -41,16 +41,46 @@
                 <p>Confirme a senha</p>
                 <input type="password" name="confirm_password" placeholder="********" required>
             </label>
-            <label class="form-input-text">
-                <p>Nivel administrativo</p>
-                <select name="admin_level" require>
-                    <option value="n" disabled selected>Selecione</option>
-                    <option value="0">Assistente</option>
-                    <option value="1">Funcionário</option>
-                    <option value="2">Gerente</option>
-                    <option value="3">Administrador</option>
-                </select>
+            <label>
+                <p>Permissões</p>
             </label>
+            <div class="permissions-grid">
+                <div class="parallel">
+                    <p>Área</p>
+                    <p>Leitura</p>
+                    <p>Leitura e Alteração</p>
+                </div>
+                <div class="parallel">
+                    <p>Livro caixa</p>
+                    <input type="checkbox" name="cashbook" value="1">
+                    <input type="checkbox" name="cashbook" value="2">
+                </div>
+                <div class="parallel">
+                    <p>Clientes</p>
+                    <input type="checkbox" name="clients" value="1">
+                    <input type="checkbox" name="clients" value="2">
+                </div>
+                <div class="parallel">
+                    <p>Orçamentos</p>
+                    <input type="checkbox" name="orders" value="1">
+                    <input type="checkbox" name="orders" value="2">
+                </div>
+                <div class="parallel">
+                    <p>Estoque & Marcas</p>
+                    <input type="checkbox" name="inventory" value="1">
+                    <input type="checkbox" name="inventory" value="2">
+                </div>
+                <div class="parallel">
+                    <p>Lembretes</p>
+                    <input type="checkbox" name="reminders" value="1">
+                    <input type="checkbox" name="reminders" value="2">
+                </div>
+                <div class="parallel">
+                    <p>Usuários</p>
+                    <input type="checkbox" name="users" value="1">
+                    <input type="checkbox" name="users" value="2">
+                </div>
+            </div>
             <input type="hidden" name="action" value="new">
             <input type="hidden" name="id" value="">
             <div class="parallel">

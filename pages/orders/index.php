@@ -11,7 +11,7 @@
     </div>
     <div class="content">
         <nav class="menu">
-            <button type="button" id="only_client" style="display: none" class="button">Serviços do cliente: <b>Carlos</b> ×</button>
+            <button type="button" id="only_client" style="display: none" class="button">Serviços do cliente: <b></b> ×</button>
             <button type="button" id="register_new" class="button">Novo Orçamento</button>
             <input type="text" id="search" class="button" placeholder="Pesquisar...">
             <ul id="pagination"></ul>

@@ -1,6 +1,5 @@
 ul.list.min {
     list-style: none;
-    padding: 10px 0;
 }
 ul.list.min li {
     display: flex;

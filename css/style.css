@@ -56,7 +56,7 @@
 .side .menu ul li {
     height: 40px;
     width: 100%;
-    display: flex;
+    display: none;
 }
 .side .menu ul li a {
     padding: calc(17.5px - 0.5em);
@@ -76,7 +76,6 @@
 .side .menu ul li:hover a {
     background-color: #f5f5f5;
 }
-
 .side .menu ul li a i {
     position: absolute;
     height: 34px;
@@ -112,10 +111,16 @@
     overflow-x: auto;
     height: calc(100vh - 50px);
     width: 100%;
-    padding: 10px 20px;
+    padding: 0px 20px 10px 20px;
 }
 .wrapper .container .content .menu {
     display: flex;
+    position: sticky;
+    top: 0;
+    padding: 10px 0px;
+    background: white;
+    transition: linear .1s all;
+    gap: 5px;
 }
 .wrapper .container .content .menu .button {
     height: 35px;
@@ -125,12 +130,22 @@
     background-color: #eee;
     border-radius: 2.5px;
     cursor: pointer;
-    margin-right: 5px;
+}
+.wrapper .container .content .menu label.button {
+    display: flex;
+    cursor: initial;
+}
+.wrapper .container .content .menu label.button p {
+    margin: auto 0;
+}
+.wrapper .container .content .menu .separator {
+    margin: auto;
 }
 .wrapper .container .content .menu ul {
     display: flex;
     list-style: none;
     margin-left: auto;
+    gap: 5px;
 }
 .wrapper .container .content .menu li.button {
     width: 35px;
@@ -212,7 +227,6 @@
 }
 .form-input-text input,
 .form-input-text select {
-
     height: 35px;
     width: 100%;
     padding: 0 10px;
@@ -221,7 +235,6 @@
     border-radius: 2.5px;
     margin-top: 10px;
     margin-bottom: 20px;
-
 }
 .form-input-text .alias {
     margin-top: -12px;
@@ -376,7 +389,6 @@
 .order_itens label {
     display: flex;
     flex-direction: column;
-    /*flex: 1 1 calc(50% - 10px);*/
     flex: 1;
     position: relative;
 }
@@ -399,6 +411,8 @@
 }
 .order_itens label .custom-datalist li {
     cursor: pointer;
+}
+.order_itens .order_client label .custom-datalist li {
     text-transform: capitalize;
 }
 .order_itens p {
@@ -429,7 +443,8 @@
     align-items: center;
     margin-bottom: 10px;
 }
-.order_itens .order_itens_list input[type="text"] {
+.order_itens .order_itens_list input[type="text"],
+.order_itens .order_itens_list input[type="number"] {
     padding: 10px;
     font-size: 16px;
     border: 1px solid #ccc;
@@ -438,8 +453,9 @@
 .order_itens .order_itens_list input[name="items[]"] {
     flex: 1;
 }
-.order_itens .order_itens_list input[name="values[]"] {
-    max-width: 200px;
+.order_itens .order_itens_list input[name="values[]"],
+.order_itens .order_itens_list input[name="total[]"] {
+    max-width: 140px;
 }
 .order_itens .order_itens_list button {
     background-color: #e74c3c;
@@ -564,6 +580,94 @@
     cursor: pointer;
     color: var(--main-color);
 }
+.custom-confirm-overlay {
+    z-index: 100;
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    justify-content: center;
+    align-items: center;
+    visibility: hidden;
+    opacity: 0;
+    display: flex;
+    transition: linear .1s all;
+}
+.custom-confirm-modal {
+    background-color: white;
+    padding: 15px;
+    border-radius: 0px 0px 3px 3px;
+    box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    margin-bottom: auto;
+    width: 100%;
+    max-width: 385px;
+    min-height: 110px;
+    display: flex;
+    flex-direction: column;
+}
+.custom-confirm-modal p {
+    text-align: left;
+    color: #777777;
+    font-weight: bold;
+}
+.custom-confirm-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: auto;
+}
+.custom-confirm-modal button {
+    padding: 8px 15px;
+    margin: 0;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    color: var(--out-text-color)
+}
+.custom-confirm-modal .yes-btn {
+    background-color: var(--main-color);
+}
+.custom-confirm-modal .no-btn {
+    background-color: #f44336;
+}
+.custom-confirm-overlay.active {
+    visibility: visible;
+    opacity: 1;
+}
+.permissions-grid {
+    margin: 10px 0 15px 0;
+}
+.permissions-grid .parallel{
+    padding: 5px 8px;
+}
+.permissions-grid .parallel:first-child{
+    padding: 8px;
+    background: color(srgb 0.2 0.2 0.2 / 0.1);
+    border-radius: 3px;
+    margin-bottom: 5px;
+}
+.permissions-grid .parallel p:not(:first-child),
+.permissions-grid .parallel input {
+    margin-left: 5px;
+}
+.permissions-grid .parallel p:not(:first-child) {
+    min-width: 65px;
+}
+.permissions-grid .parallel input {
+    width: 1em;
+    height: 1em;
+    cursor: pointer;
+}
+.permissions-grid .parallel input:last-child {
+    margin-left: 138px;
+}
+.permissions-grid .parallel p:first-child {
+    margin-right: auto;
+}
+
 @media (max-width: 1024px) {
     .side {
         position: absolute;
@@ -629,7 +733,8 @@
         overflow-x: auto;
     }
     .wrapper .container .content .menu {
-        height: 55px;
+        height: 65px;
+        overflow-y: hidden;
     }
     ul.list.min {
         height: calc(100vh - 150px);

@@ -1,23 +1,12 @@
 <?php
-    include('inc/session.php');
+    date_default_timezone_set('America/Sao_Paulo');
 
-    if ($_GET['page'] === 'logout') {
-        session_destroy();
-        header("Location: login.php");
-        exit;
-    };
-
-    $baseDir  = './pages/';
-    $pageGet  = $_GET['page'] ?? 'cashbook';
-    $pagePath = realpath($baseDir . basename($pageGet));
-
-    if (!$pagePath || strpos($pagePath, realpath($baseDir)) !== 0) {
-        header('HTTP/1.1 403 Forbidden');
-        exit;
-    };
+    include('php/test.string.php');
+    include('inc/router.php');
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
+    <!-- Generated at <?= date('d/m/Y - H:i:s') ?> -->
     <head>
         <meta charset="UTF-8">
         <link rel="icon" type="image/x-icon" href="img/favicon.ico">
@@ -27,20 +16,24 @@
         <link rel="stylesheet" href="css/style.css">
         <link rel="stylesheet" href="css/list.css">
         <script>
-            const path = "<?= $pageGet ?>";
+            const path = "<?= $page ?>";
+            const permsLocal = <?= (Int)$permissionsPage ?>;
+            const perms = <?= (Int)$adminLevel ?>;
             const today = "<?= date('Y-m-d') ?>";
         </script>
         <script src="js/mask.js"></script>
+        <script src="js/bigDecimal.js"></script>
         <script src="js/index.js"></script>
     </head>
-<body>
-    <div class="side" id="side">
-        <?php include('inc/header.php');?>
-        <?php include('inc/widget.php');?>
-        <?php include('inc/menu.php');?>
-        <?php include('inc/footer.php');?>
-    </div>
-    <div class="wrapper">
-        <?php include($pagePath . '/index.php');?>
-    </div>
-</body>
+    <body>
+        <div class="side" id="side">
+            <?php include('inc/header.php');?>
+            <?php include('inc/widget.php');?>
+            <?php include('inc/menu.php');?>
+            <?php include('inc/footer.php');?>
+        </div>
+        <div class="wrapper">
+            <?php include($pagePath . '/index.php');?>
+        </div>
+    </body>
+</html>

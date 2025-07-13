@@ -3,18 +3,26 @@ include("../inc/session.php");
 include("database.php");
 include("test.string.php");
 
+$perms       = hasPermission($_SESSION["user"]["admin_level"], "inventory");
+$permsOrders = hasPermission($_SESSION["user"]["admin_level"], "orders");
+
 $response = ["error" => false];
-$action   = $_POST["action"] ?? null; // String
+$action   = $_POST["action"] ?? null;
 
 function crudInventory() {
     global $conn;
     global $action;
+    global $perms;
 
-    $description = $_POST["description"] ?? null; // String
-    $quantity    = $_POST["quantity"]    ?? null; // Int
-    $compatible  = $_POST["compatible"]  ?? "";   // String
-    $price       = $_POST["price"]       ?? null; // Float
-    $id          = $_POST["id"]          ?? null; // Int
+    if ($perms < 2) {
+        throw new Exception("Você não possui poder administrativo para essa ação.");
+    };
+    
+    $description = $_POST["description"] ?? null;
+    $quantity    = $_POST["quantity"]    ?? null;
+    $compatible  = $_POST["compatible"]  ?? "";
+    $price       = $_POST["price"]       ?? null;
+    $id          = $_POST["id"]          ?? null;
 
     include('execute.query.php');
 
@@ -41,10 +49,15 @@ function crudInventory() {
 
     if (in_array($action, ["new", "edit"])) {
         if (testIsEmpty($description))               throw new Exception("A descrição do item não pode ser vazia.");
-        if (!is_numeric($price) || $price < 0)       throw new Exception("O preço não pode ser abaixo de zero.");
+        if (!is_numeric($price) || $price < 0)       throw new Exception("O preço não pode ser abaixo de zero."); 
         if (!is_numeric($quantity) || $quantity < 0) throw new Exception("A Quantidade não pode ser abaixo de zero.");
+        if (!isValidMonetary($price))                throw new Exception("O valor de registro não é numérico.");
 
-        $params = [(String)$description, (float)$price, (Int)$quantity, (String)$compatible];
+        $price = adjustValueMonetary($price);
+
+        if ($price == "0.00")                        throw new Exception("O preço não pode ser abaixo de zero.");
+  
+        $params = [(String)$description, (String)$price, (Int)$quantity, (String)$compatible];
         $types = "sdis";
 
         if     ($action === "new")  { $query = $queryInsert; }
@@ -60,11 +73,17 @@ function crudInventory() {
 
 function listInventory() {
     global $conn;
+    global $perms;
+    global $permsOrders;
+
+    if ($perms < 1 && $permsOrders < 1) {
+        throw new Exception("Você não possui permissão para acessar esta informação.");
+    };
 
     $search      = $_POST["search"] ?? "";
     $modelsArray = $_POST["models"] ?? [];
-    $limit       = isset($_POST["limit"]) ? (int)$_POST["limit"] : 20;
-    $page        = isset($_POST["page"])  ? (int)$_POST["page"] : 1;
+    $limit       = max(1, (int)$_POST["limit"] ?: 20);
+    $page        = max(1, (int)$_POST["page"]  ?: 1);
     $offset      = ($page - 1) * $limit;
     $response    = [];
     $stmt        = 

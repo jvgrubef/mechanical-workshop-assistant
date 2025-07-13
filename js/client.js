@@ -1,4 +1,4 @@
-window.addEventListener('load', () => {
+window.addEventListener('load', async () => {
     let searchTimeout;
 
     const clientList       = document.getElementById('client_list');
@@ -18,16 +18,18 @@ window.addEventListener('load', () => {
     const registerAddress  = registerForm.querySelector('input[name="address"]');
     const registerRating   = registerForm.querySelector('input[name="rating"]');
 
-    const handleAction = (action, confirmMessage = null) => {
+    const handleAction = async (action, confirmMessage = null) => {
+        if (permsLocal < 2) return;
+
         if(confirmMessage) {
-            if (!confirm(confirmMessage)) return;
+            if (!await customConfirm(confirmMessage, 'Claro', 'Cancelar')) return;
         };
 
         registerAction.value = action;
         const formData = new FormData(registerFormData);
         handleSubmitGlobal(formData, 'php/clients.php', (data) => {
             if (data.error) {
-                alert(data.error);
+                customAlert(data.error);
                 return;
             };
     
@@ -97,7 +99,9 @@ window.addEventListener('load', () => {
 
         itemEnd.appendChild(itemRating);
         itemEnd.appendChild(itemSearch);
-        itemEnd.appendChild(itemEdit);
+
+        if (permsLocal > 1) itemEnd.appendChild(itemEdit);
+        
         item.appendChild(itemName);
         item.appendChild(itemPhones);
         item.appendChild(itemAddress);
@@ -138,11 +142,11 @@ window.addEventListener('load', () => {
 
         handleSubmitGlobal(formData, 'php/clients.php', (data) => {
             if (data.error) {
-                alert(data.error);
+                customAlert(data.error);
                 return;
             };
 
-            while (clientList.firstChild) clientList.removeChild(clientList.firstChild);
+            clearCustomListGLobal(clientList);
             data.records.forEach(e => listInput(e));
 
             paginationGlobal(data.pages.total, data?.currentPage, paginationList, (page) => {
@@ -152,8 +156,7 @@ window.addEventListener('load', () => {
     };
 
     const resetRegister = () => {
-        while (registerPhones.nextElementSibling.firstChild) 
-            registerPhones.nextElementSibling.removeChild(registerPhones.nextElementSibling.firstChild);
+        clearCustomListGLobal(registerPhones.nextElementSibling);
         
         registerForm.classList.remove('show');
         registerAction.value  = "new";
@@ -170,18 +173,21 @@ window.addEventListener('load', () => {
 
     searchInput.addEventListener('input', () => {
         clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(function() {
+        searchTimeout = setTimeout(() => {
             window.location.hash = '?search=' + searchInput.value;
         }, 400);
     });
 
-    registerNew.addEventListener('click', () => registerForm.classList.add('show'));
-    registerFormData.addEventListener('submit', event => event.preventDefault());
-    registerDelete.addEventListener('click', () => handleAction('del', 'Tem certeza? Isso não poderá ser desfeito'));
-    registerInsert.addEventListener('click', () => handleAction('new', null));
-    registerEdit.addEventListener('click', () => handleAction('edit', 'Confirmar alteração?'));
-    registerClose.addEventListener('click', () => resetRegister());
-
+    if (permsLocal > 1) {
+        registerNew.addEventListener('click', () => registerForm.classList.add('show'));
+        registerFormData.addEventListener('submit', event => event.preventDefault());
+        registerDelete.addEventListener('click', async () => await handleAction('del', 'Tem certeza? Isso não poderá ser desfeito'));
+        registerInsert.addEventListener('click', async () => await handleAction('new', null));
+        registerEdit.addEventListener('click', async () => await handleAction('edit', 'Confirmar alteração?'));
+        registerClose.addEventListener('click', () => resetRegister());
+    } else {
+        registerNew.style.display = 'none';
+    }
     window.addEventListener('hashchange', () => {
         const newSearchFromHash = getSearchFromHash();
         searchInput.value = newSearchFromHash.search ?? '';
@@ -200,4 +206,3 @@ window.addEventListener('load', () => {
         listPhones(event.target.value);
     });
 });
-

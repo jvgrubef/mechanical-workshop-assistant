@@ -1,4 +1,4 @@
-window.addEventListener('load', () => {
+window.addEventListener('load', async () => {
     const cashbookList            = document.getElementById('cashbook_list');
     const totalBalance            = document.getElementById('total_balance');
     const monthBalance            = document.getElementById('month_balance');
@@ -18,16 +18,18 @@ window.addEventListener('load', () => {
     const registerTransactionDate = registerForm.querySelector('input[name="transaction_date"]');
     const registerTransactionType = registerForm.querySelectorAll('input[name="transaction_type"]');
     
-    const handleAction = (action, confirmMessage = null) => {
+    const handleAction = async (action, confirmMessage = null) => {
+        if (permsLocal < 2) return;
+        
         if(confirmMessage) {
-            if (!confirm(confirmMessage)) return;
+            if (!await customConfirm(confirmMessage, 'Claro', 'Cancelar')) return;
         };
 
         registerAction.value = action;
         const formData = new FormData(registerFormData);
         handleSubmitGlobal(formData, 'php/cashbook.php', (data) => {
             if (data.error) {
-                alert(data.error);
+                customAlert(data.error)
                 return;
             };
     
@@ -44,20 +46,22 @@ window.addEventListener('load', () => {
         const itemAmount = document.createElement('p');
         const itemIcon   = document.createElement('img');
 
-        item.className       = input.amount > 0 ? 'green' : 'red';
+        item.className       = input.amount.includes('-') ? 'red' :'green';        
         itemName.className   = "description";
         itemAmount.className = "amount";
         itemEnd.className    = "end"
         itemEdit.className   = "edit"
 
         itemName.textContent   = input.description;
-        itemAmount.textContent = input.amount.replace('.', ',');
+        itemAmount.textContent = formatCurrency(input.amount);
 
         itemIcon.src = 'img/icons/ellipsis-vertical.svg';
 
         itemEdit.appendChild(itemIcon);
         itemEnd.appendChild(itemAmount);
-        itemEnd.appendChild(itemEdit);
+        
+        if (permsLocal > 1) itemEnd.appendChild(itemEdit);
+
         item.appendChild(itemName);
         item.appendChild(itemEnd);
         cashbookList.appendChild(item);
@@ -66,12 +70,12 @@ window.addEventListener('load', () => {
             registerId.value              = input.id;
             registerDescription.value     = input.description;
             registerTransactionDate.value = input.transaction_date;
-
-            const amountValue             = Math.abs(input.amount);
+    
+            const amountValue             = input.amount.replace(/-/g, '');
             registerAmount.value          = amountValue;
-            registerAmountFake.value      = formatCurrency(String(Math.round(amountValue * 100)));
-        
-            registerTransactionType[input.amount < 0 ? 1 : 0].checked = true;
+            registerAmountFake.value      = formatCurrency(amountValue.replace(/\D+/g, ''));
+
+            registerTransactionType[input.amount !== amountValue ? 1 : 0].checked = true;
 
             registerDelete.style.display = "initial";
             registerEdit.style.display   = "initial";
@@ -87,15 +91,15 @@ window.addEventListener('load', () => {
 
         handleSubmitGlobal(formData, 'php/cashbook.php', (data) => {
             if (data.error) {
-                alert(data.error);
+                customAlert(data.error);
                 return;
             };
 
-            while (cashbookList.firstChild) cashbookList.removeChild(cashbookList.firstChild);
-
+            clearCustomListGLobal(cashbookList);
             data.records.forEach(e => listInput(e));
-            totalBalance.value = ('Em caixa: R$ ' + (data?.total_balance ?? '0,00')).replace('.', ',');
-            monthBalance.value = ('Lucro do Mês: R$ ' + (data?.month_balance ?? '0,00')).replace('.', ',');
+    
+            totalBalance.textContent = ('Em caixa: R$ ' + (data?.total_balance ?? '0,00')).replace('.', ',');
+            monthBalance.textContent = ('Lucro do Mês: R$ ' + (data?.month_balance ?? '0,00')).replace('.', ',');
         });
     };
 
@@ -127,12 +131,17 @@ window.addEventListener('load', () => {
             .replace(',', '.');
     });
 
-    registerNew.addEventListener('click', () => registerForm.classList.add("show"));
-    registerFormData.addEventListener('submit', event => event.preventDefault());
-    registerDelete.addEventListener('click', () => handleAction('del', 'Tem certeza? Isso não poderá ser desfeito'));
-    registerInsert.addEventListener('click', () => handleAction('new', null));
-    registerEdit.addEventListener('click', () => handleAction('edit', 'Confirmar alteração?'));
-    registerClose.addEventListener('click', resetRegister);
+    if (permsLocal > 1) {
+        registerNew.addEventListener('click', () => registerForm.classList.add("show"));
+        registerFormData.addEventListener('submit', event => event.preventDefault());
+        registerDelete.addEventListener('click', async () => await handleAction('del', 'Tem certeza? Isso não poderá ser desfeito'));
+        registerInsert.addEventListener('click', async () => await handleAction('new', null));
+        registerEdit.addEventListener('click', async () => await handleAction('edit', 'Confirmar alteração?'));
+        registerClose.addEventListener('click', resetRegister);
+    } else {
+        registerNew.style.display = 'none';
+    };
+
     
     registerTransactionDate.value = 
     registerTransactionDate.max = 
@@ -167,4 +176,3 @@ window.addEventListener('load', () => {
     dateInput.value = 
     today;
 });
-

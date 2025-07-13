@@ -1,11 +1,3 @@
-<?php 
-    $adminLevelList = [
-        'Assistente',
-        'Funcionário',
-        'Gerente',
-        'Administrador'
-    ];
-?>
 <div class="container">
     <div class="header">
         <h1 class="title">Perfil</h1>
@@ -47,14 +39,10 @@
                 </label>
             </div>
             <div class="order_footer">
-                <label style="margin-right: auto;">
-                    <p>Tipo de conta</p>
-                    <input type="text" readonly value="<?=$adminLevelList[$_SESSION['user']['admin_level']]?>">
-                </label>
                 <button type="submit">✔</button>
             </div>
         </form>
     </div>
 </div>
 
-<script src="js/profile.js"></script>
+<script><?php include('js/profile.js');?></script>

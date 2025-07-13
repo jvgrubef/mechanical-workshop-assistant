@@ -25,14 +25,22 @@
                     <textarea name="details" placeholder="Exemplo: Sabre com corrente, rabo, faca, etc..."></textarea>
                 </label>
             </div>
-            <label>
-                <p style="display: flex;"><span>Itens</span><a class="add-from-iventory" style="margin-left:auto">Adicionar via Estoque</a></p>
-            </label>
-            <div class="order_itens_list">
+            <div style="display: flex; justify-content: space-between;">
                 <label>
+                    <p>Itens</p>
+                </label>
+                <label style="flex: initial;flex-direction: row; cursor: pointer">
+                    <input type="checkbox" name="match_model" style="height: 1em; width: 1em; margin-right: 5px;">
+                    <p>Modelo de correspondência</p>
+                </label>
+            </div>
+            <div class="order_itens_list">
+                <label class="sum-this first-item">
+                    <input type="number" name="qtd[]" placeholder="0" value="1" required style="width: 65px;" min="1">
                     <input type="text" name="items[]" placeholder="Descrição, exemplo: Mão de obra" required/>
                     <input type="text" name="values[]" value="R$ 0,00" placeholder="R$ 0,00" required/>
                     <button type="button" name="add_item">+</button>
+                    <div class="custom-datalist"></div>
                 </label>
             </div>
             <div class="order_footer">
@@ -56,7 +64,9 @@
                     <input type="text" name="value" value="R$ 0,00" placeholder="R$ 0,00" readonly />
                 </label>
                 <input type="hidden" name="id">
+                <input type="hidden" name="model">
                 <input type="hidden" name="client_id">
+
                 <input type="hidden" name="action" value="new">
                 <button type="submit" name="confirm_order">✔</button>
                 <button type="button" name="delete_order" style="padding: 10px;"><?php include('./img/icons/trash.svg');?></button>
@@ -84,7 +94,4 @@
     </div>
 </div>
 
-<script>
-    const order = '<?= $_GET['view']; ?>';
-</script>
 <script src="js/orders.view.js"></script>

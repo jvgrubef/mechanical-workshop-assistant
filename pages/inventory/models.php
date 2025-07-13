@@ -44,7 +44,6 @@
                     <option value="outro">
                 </datalist>
             </label>
-
             <input type="hidden" name="action" value="new">
             <input type="hidden" name="id" value="">
             <div class="parallel">
@@ -56,4 +55,4 @@
     </div>
 </div>
 
-<script src="js/inventory.models.js"></script>
+<script src="js/models.js"></script>

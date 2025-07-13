@@ -3,26 +3,37 @@ include("../inc/session.php");
 include("database.php");
 include("test.string.php");
 
+$perms    = hasPermission($_SESSION["user"]["admin_level"], "reminders");
+
 $response = ["error" => false];
-$action   = $_POST["action"] ?? null; // String
+$action   = $_POST["action"] ?? null;
 
 function crudReminders() {
     global $conn;
     global $action;
+    global $perms;
 
-    $date        = $_POST['date']       ?? null; // yyyy-MM-dd String
-    $deadline    = $_POST['deadline']   ?? null; // yyyy-MM-dd String
-    $description = $_POST['details']    ?? "";   // String
-    $category    = $_POST['importance'] ?? null; // 0-3 INT
-    $type        = $_POST['period']     ?? null; // 0-3 INT
-    $title       = $_POST['title']      ?? null; // String
-    $day         = $_POST['day']        ?? null; // 1-31 INT
-    $id          = $_POST['id']         ?? null; // INT
+    $date        = $_POST['date']       ?? null;
+    $deadline    = $_POST['deadline']   ?? null;
+    $description = $_POST['details']    ?? "";
+    $category    = $_POST['importance'] ?? null;
+    $type        = $_POST['period']     ?? null;
+    $title       = $_POST['title']      ?? null;
+    $day         = $_POST['day']        ?? null;
+    $id          = $_POST['id']         ?? null;
 
     include('execute.query.php');
 
     if (!in_array($action, ["get", "del", "new", "edit"])) {
         throw new Exception("Tipo de operação inválida.");
+    };
+
+    if ($action == "get" && $perms < 1) {
+        throw new Exception("Você não possui permissão para acessar esta informação.");
+    };
+
+    if (in_array($action, ["del", "edit", "new"]) && $perms < 2) {
+        throw new Exception("Você não possui poder administrativo para essa ação.");
     };
 
     $queryInsert = "INSERT INTO `reminders`(`title`, `description`, `reminder_type`, `reminder_category`, `reminder_date`, `reminder_deadline`,  `reminder_day`) VALUES (?, ?, ?, ?, ?, ?, ?)";
@@ -83,10 +94,15 @@ function crudReminders() {
 
 function listReminders() {
     global $conn;
+    global $perms;
+
+    if ($perms < 1) {
+        throw new Exception("Você não possui poder administrativo para essa ação.");
+    };
 
     $search    = $_POST["search"] ?? "";
-    $limit     = isset($_POST["limit"]) ? (int)$_POST["limit"] : 20;
-    $page      = isset($_POST["page"]) ? (int)$_POST["page"] : 1;
+    $limit     = max(1, (int)$_POST["limit"] ?: 20);
+    $page      = max(1, (int)$_POST["page"]  ?: 1);
     $offset    = ($page - 1) * $limit;
     $response  = [];
     $stmt      = 

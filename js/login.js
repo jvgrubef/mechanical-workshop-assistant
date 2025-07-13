@@ -21,7 +21,7 @@ window.addEventListener('load', () => {
             };
 
             loginMessage.textContent = "Login bem-sucedido!";
-            window.location.href = 'index.php';
+            window.location.href = '?page=dashboard';
         })
         .catch(error => {
             console.error('Erro ao fazer login:', error);

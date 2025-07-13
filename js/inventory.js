@@ -28,16 +28,18 @@ window.addEventListener('load', async () => {
     const modelsSearchList          = modelsSearch.querySelector('.models-list');
     const modelsSearchPagination    = modelsSearch.querySelector('.pagination-list');
 
-    const handleAction = (action, confirmMessage = null) => {
+    const handleAction = async (action, confirmMessage = null) => {
+        if (permsLocal < 2) return;
+
         if(confirmMessage) {
-            if (!confirm(confirmMessage)) return;
+            if (!await customConfirm(confirmMessage, 'Claro', 'Cancelar')) return;
         };
 
         registerAction.value = action;
         const formData = new FormData(registerFormData);
         handleSubmitGlobal(formData, 'php/inventory.php', (data) => {
             if (data.error) {
-                alert(data.error);
+                customAlert(data.error);
                 return;
             };
     
@@ -133,7 +135,7 @@ window.addEventListener('load', async () => {
 
         itemName.textContent     = input.description;
         itemModels.textContent   = input.models;
-        itemValue.textContent    = formatCurrency(String(input.value));
+        itemValue.textContent    = formatCurrency(input.value);
         itemQuantity.textContent = 'Qtd: ' + input.quantity;
 
         itemIcon.src = 'img/icons/ellipsis-vertical.svg';
@@ -141,7 +143,9 @@ window.addEventListener('load', async () => {
         itemEdit.appendChild(itemIcon);
         itemEnd.appendChild(itemQuantity);
         itemEnd.appendChild(itemValue);
-        itemEnd.appendChild(itemEdit);
+
+        if (permsLocal > 1) itemEnd.appendChild(itemEdit);
+        
         item.appendChild(itemName);
         item.appendChild(itemModels);
         item.appendChild(itemEnd);
@@ -150,7 +154,7 @@ window.addEventListener('load', async () => {
         itemEdit.addEventListener("click", () => {
             registerId.value                = input.id;
             registerDescription.value       = input.description;
-            registerPriceFake.value         = formatCurrency(String(input.value * 100));
+            registerPriceFake.value         = formatCurrency(bigDecimal.multiply(input.value, '100'));
             registerPrice.value             = input.value;
             registerQuantity.value          = input.quantity;
             registerCompatible.value        = input.compatible;
@@ -176,11 +180,11 @@ window.addEventListener('load', async () => {
 
         handleSubmitGlobal(formData, 'php/inventory.models.php', (data) => {
             if (data.error) {
-                alert(data.error);
+                customAlert(data.error);
                 return;
             };
 
-            while (modelsSearchList.firstChild) modelsSearchList.removeChild(modelsSearchList.firstChild);
+            clearCustomListGLobal(modelsSearchList);
             data.records.forEach(e => listModels(e));
 
             paginationGlobal(data.pages.total, data?.currentPage, modelsSearchPagination, (page) => {
@@ -208,7 +212,7 @@ window.addEventListener('load', async () => {
     
             handleSubmitGlobal(formData, 'php/inventory.models.php', (data) => {
                 if (data.error) {
-                    alert(data.error);
+                    customAlert(data.error);
                     return reject(data.error);
                 }
                 console.log('pesquisa realizada');
@@ -218,7 +222,6 @@ window.addEventListener('load', async () => {
             });
         });
     };
-    
 
     const fetchRecords = async () => {
         await searchModelsIds().then(e => {
@@ -232,11 +235,11 @@ window.addEventListener('load', async () => {
     
             handleSubmitGlobal(formData, 'php/inventory.php', (data) => {
                 if (data.error) {
-                    alert(data.error);
+                    customAlert(data.error);
                     return;
                 };
     
-                while (inventoryList.firstChild) inventoryList.removeChild(inventoryList.firstChild);
+                clearCustomListGLobal(inventoryList);
                 data.records.forEach(e => listInput(e));
     
                 paginationGlobal(data.pages.total, data?.currentPage, paginationList, (page) => {
@@ -304,12 +307,17 @@ window.addEventListener('load', async () => {
             .replace(',', '.');
     });
 
-    registerNew.addEventListener('click', () => registerForm.classList.add("show"));
-    registerFormData.addEventListener('submit', event => event.preventDefault());
-    registerDelete.addEventListener('click', () => handleAction('del', 'Tem certeza? Isso não poderá ser desfeito'));
-    registerInsert.addEventListener('click', () => handleAction('new', null));
-    registerEdit.addEventListener('click', () => handleAction('edit', 'Confirmar alteração?'));
-    registerClose.addEventListener('click', () => resetRegister());
+    if (permsLocal > 1) {
+        registerNew.addEventListener('click', () => registerForm.classList.add("show"));
+        registerFormData.addEventListener('submit', event => event.preventDefault());
+        registerDelete.addEventListener('click', async () => await handleAction('del', 'Tem certeza? Isso não poderá ser desfeito'));
+        registerInsert.addEventListener('click', async () => await handleAction('new', null));
+        registerEdit.addEventListener('click', async () => await handleAction('edit', 'Confirmar alteração?'));
+        registerClose.addEventListener('click', () => resetRegister());
+    } else {
+        registerNew.style.display = 'none';
+    };
+
     toggleModels.addEventListener('click', () => window.location.href = '?page=inventory&models');
 
     window.addEventListener('hashchange', () => {
