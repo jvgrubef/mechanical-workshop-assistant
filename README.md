@@ -11,8 +11,6 @@ Este é um pequeno assistente para auxiliar na gestão de uma oficina mecânica.
 
 - Entrada do caixa ao finalizar serviço.
 - Implementação de uma área de venda.
-- Pesquisa de peça no estoque para adição ao orçamento.
-- Adição do template do banco de dados SQL.
 - Criação de um container Docker para facilitar a execução do projeto.
 
 ## Contribuição
