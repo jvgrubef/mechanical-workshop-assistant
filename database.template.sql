@@ -16,7 +16,7 @@ DELIMITER $$
 --
 -- Funções
 --
-CREATE DEFINER=`sakurai`@`%` FUNCTION `get_cash_balance` () RETURNS DECIMAL(65,2) DETERMINISTIC BEGIN
+CREATE FUNCTION `get_cash_balance` () RETURNS DECIMAL(65,2) DETERMINISTIC BEGIN
     DECLARE balance DECIMAL(65, 2);
     
     -- Soma os valores da tabela 'cash_book' para calcular o saldo
@@ -26,7 +26,7 @@ CREATE DEFINER=`sakurai`@`%` FUNCTION `get_cash_balance` () RETURNS DECIMAL(65,2
     RETURN balance;
 END$$
 
-CREATE DEFINER=`sakurai`@`%` FUNCTION `get_model_names_by_ids` (`ids` VARCHAR(255)) RETURNS VARCHAR(255) CHARSET utf8mb4 COLLATE utf8mb4_general_ci DETERMINISTIC BEGIN
+CREATE FUNCTION `get_model_names_by_ids` (`ids` VARCHAR(255)) RETURNS VARCHAR(255) CHARSET utf8mb4 COLLATE utf8mb4_general_ci DETERMINISTIC BEGIN
     DECLARE result VARCHAR(255);
     SET ids = REPLACE(ids, ' ', '');
     SELECT GROUP_CONCAT(m.name SEPARATOR ', ') 
@@ -37,7 +37,7 @@ CREATE DEFINER=`sakurai`@`%` FUNCTION `get_model_names_by_ids` (`ids` VARCHAR(25
     RETURN result;
 END$$
 
-CREATE DEFINER=`sakurai`@`%` FUNCTION `get_month_balance` (`month` INT, `year` INT) RETURNS DECIMAL(65,2) DETERMINISTIC BEGIN
+CREATE FUNCTION `get_month_balance` (`month` INT, `year` INT) RETURNS DECIMAL(65,2) DETERMINISTIC BEGIN
     DECLARE balance DECIMAL(65, 2);
     
     -- Soma os valores da tabela 'cash_book' filtrando pelo mês e ano
@@ -49,7 +49,7 @@ CREATE DEFINER=`sakurai`@`%` FUNCTION `get_month_balance` (`month` INT, `year` I
     RETURN balance;
 END$$
 
-CREATE DEFINER=`sakurai`@`%` FUNCTION `tools_remove_accents` (`text` TEXT) RETURNS TEXT CHARSET utf8mb4 COLLATE utf8mb4_general_ci DETERMINISTIC BEGIN
+CREATE FUNCTION `tools_remove_accents` (`text` TEXT) RETURNS TEXT CHARSET utf8mb4 COLLATE utf8mb4_general_ci DETERMINISTIC BEGIN
     DECLARE i INT DEFAULT 0;
     DECLARE accented_chars TEXT DEFAULT 'ÁÉÍÓÚÀÈÌÒÙÂÊÎÔÛÄËÏÖÜÃÕÑáéíóúàèìòùâêîôûäëïöüãõñçÇ';
     DECLARE unaccented_chars TEXT DEFAULT 'AEIOUAEIOUAEIOUAEIOUAONaeiouaeiouaeiouaeiouaoncC';
